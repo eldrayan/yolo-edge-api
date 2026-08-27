@@ -2,8 +2,6 @@ import base64
 import io
 import subprocess
 import time
-
-import json
 import uuid
 
 import cv2
