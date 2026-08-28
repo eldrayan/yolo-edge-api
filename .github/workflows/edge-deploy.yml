@@ -149,8 +149,8 @@ jobs:
           echo "${{ secrets.RPI_SSH_KEY }}" | tr -d '\r' > ~/.ssh/dvc_key
           chmod 600 ~/.ssh/dvc_key
           dvc remote modify --local local_remote keyfile ~/.ssh/dvc_key
-          dvc pull models/yolov8n.pt
-      - name:
+          dvc pull models/yolo-epi.pt
+      - name: Recuperar dataset via DVC
         run: dvc pull dataset/exports/epi-v1
 
       - name: Executar quality gate com dataset customizado
