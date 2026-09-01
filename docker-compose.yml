@@ -5,24 +5,26 @@ services:
       dockerfile: Dockerfile.api
     container_name: yolo-api
     ports:
-      - "8000:8000"
+      - 8000:8000
     privileged: true             # Permite acesso aos nós de mídia e DMA da câmera
     volumes:
       - ./models:/app/models:ro  # Pesos somente-leitura
       - ./output:/app/output     # Resultados gravados aqui
       - ./images:/app/images:ro  # Imagens de teste
+      - ./preprocessing:/app/preprocessing:ro  # Módulo de pré-processamento
       - /dev:/dev                # Mapeia dispositivos de hardware do host
       - /run/udev:/run/udev:ro   # Permite ao libcamera identificar o sensor via udev
     environment:
-      - MODEL_NAME=yolov8n.pt
+      - MODEL_NAME=yolo-epi.pt
     networks:
       - yolo-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [CMD, curl, -f, http://localhost:8000/health]
       interval: 15s
-      timeout: 5s
+      timeout: 10s
       retries: 3
+      start_period: 30s
 
   yolo-client:
     build:
@@ -46,18 +48,20 @@ services:
       dockerfile: Dockerfile.api    # reutiliza a mesma base ARM64
     container_name: yolo-stream
     ports:
-      - "5000:5000"
+      - 5000:5000
     privileged: true              # mesmo acesso à câmera do yolo-api
     volumes:
       - ./stream:/app/stream        # código do módulo de streaming
       - ./models:/app/models:ro     # pesos do modelo (read-only)
+      - ./preprocessing:/app/preprocessing:ro  # Módulo de pré-processamento
       - /dev:/dev                   # dispositivos de hardware do host
       - /run/udev:/run/udev:ro      # permite ao libcamera identificar o sensor via udev
     environment:
-      - MODEL_NAME=yolov8n.pt
+      - MODEL_NAME=yolo-epi.pt
     command: >
       python3 stream/mjpeg_server.py
       --device 0
+      --model models/yolo-epi.pt
       --infer-every 3
       --infer-size 320
       --port 5000
